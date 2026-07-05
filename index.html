@@ -1804,6 +1804,11 @@ function build(rows,fname,currentFile){
   restoreUiState();   // v2.0: restaura aba e filtros da sessão anterior
   render();
   toast(`${fname} carregado — ${PEDIDOS.length} pedidos · ${rows.length.toLocaleString('pt-BR')} linhas`,'success');
+
+  try{
+    localStorage.setItem('__dados_rows__', JSON.stringify(rows));
+    localStorage.setItem('__dados_fname__', fname);
+  }catch(e){ console.warn('Não foi possível salvar os dados localmente:', e); }
 }
 
 function buildThead(){
@@ -3438,6 +3443,15 @@ function priorRenderDetalhe(){
       hideLoading();
       if(rows.length) build(rows, 'dados.csv');
     }catch(e){ hideLoading(); console.error('[AutoLoad] Erro CSV:', e); }
+  } else {
+    try{
+      const savedRows = localStorage.getItem('__dados_rows__');
+      const savedFname = localStorage.getItem('__dados_fname__');
+      if(savedRows){
+        const rows = JSON.parse(savedRows);
+        if(rows && rows.length) build(rows, savedFname || 'dados salvos');
+      }
+    }catch(e){ console.error('[AutoLoad] Erro ao restaurar dados salvos:', e); }
   }
 
   const txtOk = txtRes.status === 'fulfilled' && txtRes.value.ok;
